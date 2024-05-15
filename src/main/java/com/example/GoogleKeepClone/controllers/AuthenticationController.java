@@ -1,8 +1,10 @@
 package com.example.GoogleKeepClone.controllers;
 
+import com.example.GoogleKeepClone.entities.RegisteredUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,7 +15,7 @@ import java.util.*;
 public class AuthenticationController {
 
     @PostMapping("register")
-    public ResponseEntity<Map<String, String>> register() {
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisteredUser registerRequest) {
         Map<String, String> response = new HashMap<>();
         try {
             response.put("message", "OTP generated and sent to your email.");
