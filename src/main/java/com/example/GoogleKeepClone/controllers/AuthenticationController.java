@@ -48,6 +48,10 @@ public class AuthenticationController {
 
             // Adding cookie into the response
             response.addCookie(otpCookie);
+
+            // Sending OTP to e-mail
+            this.authenticationService.sendOtpToEmail(OTP, registerRequest.getEmail());
+
             responseBody.put("OTP", String.valueOf(OTP));
             responseBody.put("message", "OTP generated and sent to your email.");
             responseBody.put("next step", "Hit the OTP verification endpoint with the OTP in request payload.");

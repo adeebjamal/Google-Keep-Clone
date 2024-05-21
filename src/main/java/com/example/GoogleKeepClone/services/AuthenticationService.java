@@ -6,4 +6,6 @@ public interface AuthenticationService {
 
     RegisteredUser getUserByEmail(String email);
 
+    void sendOtpToEmail(int OTP, String email);
+
 }
