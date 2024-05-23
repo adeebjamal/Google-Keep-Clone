@@ -20,6 +20,9 @@ target/
 *.ipr
 .mvn
 
+#Application Properties
+src/main/resources/application.properties
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

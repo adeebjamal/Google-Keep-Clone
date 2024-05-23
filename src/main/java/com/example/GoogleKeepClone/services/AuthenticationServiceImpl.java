@@ -2,8 +2,10 @@ package com.example.GoogleKeepClone.services;
 
 import com.example.GoogleKeepClone.Repositories.AuthenticationRepo;
 import com.example.GoogleKeepClone.Utilities.EmailUtility;
+import com.example.GoogleKeepClone.Utilities.JwtUtil;
 import com.example.GoogleKeepClone.entities.RegisteredUser;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private EmailUtility emailUtility;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
     public RegisteredUser getUserByEmail(String email) {
         RegisteredUser existingUser = null;
@@ -35,16 +40,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<Map<String, String>> register(String email, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> register(String email, String name, String password, HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         try {
             Random random = new Random();
             int OTP = random.nextInt(999999 - 100000 + 1) + 100000;
 
             // Generating a cookie
-            Cookie otpCookie = new Cookie("OTP", String.valueOf(OTP));
+            String payload = String.valueOf(OTP) + "`" + email + "`" + name + "`" + password;
+            Cookie otpCookie = new Cookie("OTP", this.jwtUtil.generateJwt(payload));
             otpCookie.setHttpOnly(true);    // Optional: makes the cookie inaccessible to JavaScript
-            otpCookie.setMaxAge(5 * 60);    // Optional: set expiry time in seconds (5 minutes)
+            otpCookie.setMaxAge(20 * 60);    // Optional: set expiry time in seconds (20 minutes)
 
             // Adding cookie into the response
             response.addCookie(otpCookie);
@@ -63,6 +69,38 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             System.out.println("AuthenticationServiceImpl : register");
             System.out.println("ERROR MESSAGE : " + e.getMessage());
             responseBody.put("Message", "Internal Server Error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseEntity<Map<String, String>> verifyOtp(Integer OTP, HttpServletRequest httpServletRequest) {
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            Cookie[] cookies = httpServletRequest.getCookies();
+            for(Cookie cookie: cookies) {
+                if("OTP".equals(cookie.getName())) {
+                    String otpJwt = cookie.getValue();
+                    String payload = this.jwtUtil.validateToken(otpJwt);
+                    String[] userInfo = payload.split("`");
+                    if(userInfo[0].equals(OTP.toString())) {
+                        this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], userInfo[3]);
+                        responseBody.put("Message", "Registration successful.");
+                        return new ResponseEntity<>(responseBody, HttpStatus.OK);
+                    }
+                    else {
+                        responseBody.put("Error", "Make sure that the OTP is correct.");
+                        return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+                    }
+                }
+            }
+            responseBody.put("OTP expired", "The OTP has expired. Try again after some time.");
+            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        }
+        catch(Exception e) {
+            System.out.println("AuthenticationServiceImpl : verifyOtp");
+            System.out.println(e.getMessage());
+            responseBody.put("ERROR", "Internal Server Error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
