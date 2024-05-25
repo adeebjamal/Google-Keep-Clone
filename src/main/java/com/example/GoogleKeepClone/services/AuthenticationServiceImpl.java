@@ -3,6 +3,7 @@ package com.example.GoogleKeepClone.services;
 import com.example.GoogleKeepClone.Repositories.AuthenticationRepo;
 import com.example.GoogleKeepClone.Utilities.EmailUtility;
 import com.example.GoogleKeepClone.Utilities.JwtUtil;
+import com.example.GoogleKeepClone.Utilities.PasswordHash;
 import com.example.GoogleKeepClone.entities.RegisteredUser;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordHash passwordHash;
 
     @Override
     public RegisteredUser getUserByEmail(String email) {
@@ -84,7 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     String payload = this.jwtUtil.validateToken(otpJwt);
                     String[] userInfo = payload.split("`");
                     if(userInfo[0].equals(OTP.toString())) {
-                        this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], userInfo[3]);
+                        this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], this.passwordHash.hashPassword(userInfo[3]));
                         responseBody.put("Message", "Registration successful.");
                         return new ResponseEntity<>(responseBody, HttpStatus.OK);
                     }
