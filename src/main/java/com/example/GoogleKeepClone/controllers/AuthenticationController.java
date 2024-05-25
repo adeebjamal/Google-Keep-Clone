@@ -1,5 +1,6 @@
 package com.example.GoogleKeepClone.controllers;
 
+import com.example.GoogleKeepClone.entities.LoginRequest;
 import com.example.GoogleKeepClone.entities.OtpVerificationRequest;
 import com.example.GoogleKeepClone.entities.RegisteredUser;
 import com.example.GoogleKeepClone.services.AuthenticationService;
@@ -51,18 +52,37 @@ public class AuthenticationController {
     }
 
     @PostMapping("verifyOtp")
-    public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest otpVerificationRequest, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest otpVerificationRequest, HttpServletRequest request) {
         Map<String, String> responseBody = new HashMap<>();
         try {
             if(otpVerificationRequest.getOTP() == null) {
                 responseBody.put("Error", "Make sure to add the OTP in request body.");
                 return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
             }
-            return this.authenticationService.verifyOtp(otpVerificationRequest.getOTP(), httpServletRequest);
+            return this.authenticationService.verifyOtp(otpVerificationRequest.getOTP(), request);
         }
         catch(Exception e) {
             System.out.println("AuthenticationController : verifyOtp");
             System.out.println(e.getMessage());
+            responseBody.put("message", "Internal server error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            if(loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
+                responseBody.put("Message", "Please fill all the required fields.");
+                return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+            }
+            return this.authenticationService.login(loginRequest.getEmail(), loginRequest.getPassword(), response);
+        }
+        catch(Exception e) {
+            System.out.println("AuthenticationController : login");
+            System.out.println(e.getMessage());
+            responseBody.put("Error", "Internal server error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

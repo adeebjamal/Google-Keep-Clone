@@ -13,6 +13,8 @@ public interface AuthenticationService {
 
     ResponseEntity<Map<String, String>> register(String email, String name, String password, HttpServletResponse response);
 
-    ResponseEntity<Map<String, String>> verifyOtp(Integer OTP, HttpServletRequest httpServletRequest);
+    ResponseEntity<Map<String, String>> verifyOtp(Integer OTP, HttpServletRequest request);
+
+    ResponseEntity<Map<String, String>> login(String email, String password, HttpServletResponse response);
 
 }

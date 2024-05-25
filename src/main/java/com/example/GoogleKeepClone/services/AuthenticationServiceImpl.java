@@ -78,10 +78,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<Map<String, String>> verifyOtp(Integer OTP, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<Map<String, String>> verifyOtp(Integer OTP, HttpServletRequest request) {
         Map<String, String> responseBody = new HashMap<>();
         try {
-            Cookie[] cookies = httpServletRequest.getCookies();
+            Cookie[] cookies = request.getCookies();
             for(Cookie cookie: cookies) {
                 if("OTP".equals(cookie.getName())) {
                     String otpJwt = cookie.getValue();
@@ -103,6 +103,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         catch(Exception e) {
             System.out.println("AuthenticationServiceImpl : verifyOtp");
+            System.out.println(e.getMessage());
+            responseBody.put("ERROR", "Internal Server Error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseEntity<Map<String, String>> login(String email, String password, HttpServletResponse response) {
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            RegisteredUser registeredUser = this.getUserByEmail(email);
+            if(registeredUser == null) {
+                responseBody.put("Message", "User with entered email doesn't exists.");
+                return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+            }
+            if(!registeredUser.getPassword().equals(this.passwordHash.hashPassword(password))) {
+                responseBody.put("Message", "Invalid credentials.");
+                return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+            }
+
+            Cookie loggedInUser = new Cookie("loggedInUser", this.jwtUtil.generateJwt(String.valueOf(registeredUser.getId())));
+            loggedInUser.setHttpOnly(true);    // Optional: makes the cookie inaccessible to JavaScript
+            loggedInUser.setMaxAge(24 * 60 * 60);    // Optional: set expiry time in seconds (24 hours)
+
+            response.addCookie(loggedInUser);
+
+            responseBody.put("Logged in user", registeredUser.getName());
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        }
+        catch(Exception e) {
+            System.out.println("AuthenticationServiceImpl : login");
             System.out.println(e.getMessage());
             responseBody.put("ERROR", "Internal Server Error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
