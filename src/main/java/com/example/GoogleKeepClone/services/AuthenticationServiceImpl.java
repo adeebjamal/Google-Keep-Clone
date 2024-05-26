@@ -2,8 +2,8 @@ package com.example.GoogleKeepClone.services;
 
 import com.example.GoogleKeepClone.Repositories.AuthenticationRepo;
 import com.example.GoogleKeepClone.Utilities.EmailUtility;
-import com.example.GoogleKeepClone.Utilities.JwtUtil;
-import com.example.GoogleKeepClone.Utilities.PasswordHash;
+import com.example.GoogleKeepClone.Utilities.JwtUtility;
+import com.example.GoogleKeepClone.Utilities.PasswordHashUtility;
 import com.example.GoogleKeepClone.entities.RegisteredUser;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,10 +25,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private EmailUtility emailUtility;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtUtility jwtUtility;
 
     @Autowired
-    private PasswordHash passwordHash;
+    private PasswordHashUtility passwordHashUtility;
 
     @Override
     public RegisteredUser getUserByEmail(String email) {
@@ -52,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // Generating a cookie
             String payload = String.valueOf(OTP) + "`" + email + "`" + name + "`" + password;
-            Cookie otpCookie = new Cookie("OTP", this.jwtUtil.generateJwt(payload));
+            Cookie otpCookie = new Cookie("OTP", this.jwtUtility.generateJwt(payload));
             otpCookie.setHttpOnly(true);    // Optional: makes the cookie inaccessible to JavaScript
             otpCookie.setMaxAge(20 * 60);    // Optional: set expiry time in seconds (20 minutes)
 
@@ -85,10 +85,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             for(Cookie cookie: cookies) {
                 if("OTP".equals(cookie.getName())) {
                     String otpJwt = cookie.getValue();
-                    String payload = this.jwtUtil.validateToken(otpJwt);
+                    String payload = this.jwtUtility.validateToken(otpJwt);
                     String[] userInfo = payload.split("`");
                     if(userInfo[0].equals(OTP.toString())) {
-                        this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], this.passwordHash.hashPassword(userInfo[3]));
+                        this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], this.passwordHashUtility.hashPassword(userInfo[3]));
                         responseBody.put("Message", "Registration successful.");
                         return new ResponseEntity<>(responseBody, HttpStatus.OK);
                     }
@@ -118,14 +118,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 responseBody.put("Message", "User with entered email doesn't exists.");
                 return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
             }
-            if(!registeredUser.getPassword().equals(this.passwordHash.hashPassword(password))) {
+            if(!registeredUser.getPassword().equals(this.passwordHashUtility.hashPassword(password))) {
                 responseBody.put("Message", "Invalid credentials.");
                 return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
             }
 
-            Cookie loggedInUser = new Cookie("loggedInUser", this.jwtUtil.generateJwt(String.valueOf(registeredUser.getId())));
+            Cookie loggedInUser = new Cookie("loggedInUser", this.jwtUtility.generateJwt(String.valueOf(registeredUser.getId())));
             loggedInUser.setHttpOnly(true);    // Optional: makes the cookie inaccessible to JavaScript
             loggedInUser.setMaxAge(24 * 60 * 60);    // Optional: set expiry time in seconds (24 hours)
+            loggedInUser.setPath("/");      // Now this cookie can be accessed in every endpoint of the application
 
             response.addCookie(loggedInUser);
 

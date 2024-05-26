@@ -10,7 +10,7 @@ import java.security.Key;
 import java.util.Date;
 
 @Service
-public class JwtUtilImpl implements JwtUtil {
+public class JwtUtilityImpl implements JwtUtility {
 
     private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long EXPIRATION_TIME = 900000; // 15 minutes

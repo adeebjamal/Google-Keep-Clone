@@ -1,6 +1,6 @@
 package com.example.GoogleKeepClone.Utilities;
 
-public interface JwtUtil {
+public interface JwtUtility {
 
     String generateJwt(String payload);
 

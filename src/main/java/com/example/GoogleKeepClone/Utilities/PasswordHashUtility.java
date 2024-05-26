@@ -1,6 +1,6 @@
 package com.example.GoogleKeepClone.Utilities;
 
-public interface PasswordHash {
+public interface PasswordHashUtility {
 
     String hashPassword(String plainTextPassword);
 

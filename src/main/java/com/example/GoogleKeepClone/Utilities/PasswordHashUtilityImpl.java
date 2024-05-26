@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import java.security.MessageDigest;
 
 @Service
-public class PasswordHashImpl implements PasswordHash {
+public class PasswordHashUtilityImpl implements PasswordHashUtility {
 
     @Override
     public String hashPassword(String plainTextPassword) {
