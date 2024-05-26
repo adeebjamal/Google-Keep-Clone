@@ -4,6 +4,7 @@ import com.example.GoogleKeepClone.entities.LoginRequest;
 import com.example.GoogleKeepClone.entities.OtpVerificationRequest;
 import com.example.GoogleKeepClone.entities.RegisteredUser;
 import com.example.GoogleKeepClone.services.AuthenticationService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,9 +71,18 @@ public class AuthenticationController {
     }
 
     @PostMapping("login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         try {
+            Cookie[] cookies = request.getCookies();
+            if(cookies != null) {
+                for(Cookie cookie: cookies) {
+                    if("loggedInUser".equals(cookie.getName())) {
+                        responseBody.put("Message", "You are already logged in.");
+                        return new ResponseEntity<>(responseBody, HttpStatus.OK);
+                    }
+                }
+            }
             if(loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
                 responseBody.put("Message", "Please fill all the required fields.");
                 return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
@@ -81,6 +91,34 @@ public class AuthenticationController {
         }
         catch(Exception e) {
             System.out.println("AuthenticationController : login");
+            System.out.println(e.getMessage());
+            responseBody.put("Error", "Internal server error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            Cookie[] cookies = request.getCookies();
+            if(cookies != null) {
+                for(Cookie cookie: cookies) {
+                    if("loggedInUser".equals(cookie.getName()) && !cookie.getValue().isEmpty()) {
+                        cookie.setValue("");
+                        cookie.setPath("/");
+                        cookie.setMaxAge(0);
+                        response.addCookie(cookie);
+                        responseBody.put("Message", "Logout successful");
+                        return new ResponseEntity<>(responseBody, HttpStatus.OK);
+                    }
+                }
+            }
+            responseBody.put("Message", "You are not logged in.");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
+        }
+        catch(Exception e) {
+            System.out.println("AuthenticationController : logout");
             System.out.println(e.getMessage());
             responseBody.put("Error", "Internal server error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
