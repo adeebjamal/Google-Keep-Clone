@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -34,6 +36,25 @@ public class NoteServiceImpl implements NoteService {
         }
         catch(Exception e) {
             System.out.println("NoteServiceImpl : addNote");
+            System.out.println(e.getMessage());
+            responseBody.put("Error", "Internal server error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseEntity<Map<String, Object>> getNotesByLoggedInUser(String token) {
+        Map<String, Object> responseBody = new HashMap<>();
+        try {
+            String userId = this.jwtUtility.validateToken(token);
+            List<Note> notesByLoggedInUser = new ArrayList<>();
+            notesByLoggedInUser = this.notesRepo.getNotesByLoggedInUser(userId);
+            responseBody.put("USER_ID", userId);
+            responseBody.put("NOTES", notesByLoggedInUser);
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        }
+        catch(Exception e) {
+            System.out.println("NoteServiceImpl : getNotesForLoggedInUser");
             System.out.println(e.getMessage());
             responseBody.put("Error", "Internal server error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -7,10 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +27,7 @@ public class NoteController {
             Cookie loggedInUser = null;
             if(cookies != null) {
                 for(Cookie cookie: cookies) {
-                    if("loggedInUser".equals(cookie.getName())) {
+                    if("loggedInUser".equals(cookie.getName()) && !cookie.getValue().isEmpty()) {
                         loggedInUser = cookie;
                         break;
                     }
@@ -45,7 +42,30 @@ public class NoteController {
         catch(Exception e) {
             System.out.println("NoteController : addNote");
             System.out.println(e.getMessage());
-            responseBody.put("message", "Internal server error...");
+            responseBody.put("Message", "Internal server error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("")
+    public ResponseEntity<Map<String, Object>> getNotesByLoggedInUser(HttpServletRequest request) {
+        Map<String, Object> responseBody = new HashMap<>();
+        try {
+            Cookie[] cookies = request.getCookies();
+            if(cookies != null) {
+                for(Cookie cookie: cookies) {
+                    if("loggedInUser".equals(cookie.getName()) && !cookie.getValue().isEmpty()) {
+                        return this.noteService.getNotesByLoggedInUser(cookie.getValue());
+                    }
+                }
+            }
+            responseBody.put("Message", "You need to login first.");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
+        }
+        catch(Exception e) {
+            System.out.println("NoteController : getNotesForLoggedInUser");
+            System.out.println(e.getMessage());
+            responseBody.put("Message", "Internal server error...");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

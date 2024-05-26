@@ -10,4 +10,6 @@ public interface NoteService {
 
     ResponseEntity<Map<String, String>> addNote(Note note, Cookie loggedInUser);
 
+    ResponseEntity<Map<String, Object>> getNotesByLoggedInUser(String token);
+
 }

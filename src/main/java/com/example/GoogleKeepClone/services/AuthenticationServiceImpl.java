@@ -64,7 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String body = "Thank you for signing up for Google Keep Clone. Use this OTP to verify your email " + String.valueOf(OTP);
             this.emailUtility.sendEmail(email, subject, body);
 
-            responseBody.put("OTP", String.valueOf(OTP));
+            // responseBody.put("OTP", String.valueOf(OTP));
             responseBody.put("message", "OTP generated and sent to your email.");
             responseBody.put("next step", "Hit the OTP verification endpoint with the OTP in request payload.");
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
