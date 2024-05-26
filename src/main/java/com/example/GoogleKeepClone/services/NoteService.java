@@ -12,4 +12,6 @@ public interface NoteService {
 
     ResponseEntity<Map<String, Object>> getNotesByLoggedInUser(String token);
 
+    ResponseEntity<Map<String, Object>> deleteNoteByLoggedInUser(String token, String noteId);
+
 }
