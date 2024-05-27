@@ -93,4 +93,27 @@ public class NoteController {
         }
     }
 
+    @PutMapping("{ID}")
+    public ResponseEntity<Map<String, Object>> updateNoteByLoggedInUser(@PathVariable("ID") String noteId, @RequestBody Note note, HttpServletRequest request) {
+        Map<String, Object> responseBody = new HashMap<>();
+        try {
+            Cookie[] cookies = request.getCookies();
+            if(cookies != null) {
+                for(Cookie cookie: cookies) {
+                    if("loggedInUser".equals(cookie.getName()) && !cookie.getValue().isEmpty()) {
+                        return this.noteService.updateNoteByLoggedInUser(cookie.getValue(), note, noteId);
+                    }
+                }
+            }
+            responseBody.put("Message", "You need to login first.");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
+        }
+        catch(Exception e) {
+            System.out.println("NoteController : updateNoteByLoggedInUser");
+            System.out.println(e.getMessage());
+            responseBody.put("Message", "Internal server error...");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

@@ -14,7 +14,7 @@ public interface NotesRepo extends JpaRepository<Note, Integer> {
     @Modifying
     @Transactional
     @Query(value = ADD_NOTE, nativeQuery = true)
-    public void insertNote(String title, String content, String userId);
+    void insertNote(String title, String content, String userId);
 
     public static final String GET_NOTES_FOR_LOGGED_IN_USER = "SELECT * FROM NOTE WHERE USER_ID = ?";
     @Query(value = GET_NOTES_FOR_LOGGED_IN_USER, nativeQuery = true)
@@ -29,5 +29,13 @@ public interface NotesRepo extends JpaRepository<Note, Integer> {
     @Transactional
     @Query(value = DELETE_NOTE_BY_LOGGED_IN_USER, nativeQuery = true)
     void deleteNoteByLoggedInUser(String noteId, String userId);
+
+    public static final String UPDATE_NOTE_BY_LOGGED_IN_USER = "UPDATE NOTE \n" +
+            "SET TITLE = ? , CONTENT = ? \n" +
+            "WHERE ID = ? AND USER_ID = ?";
+    @Modifying
+    @Transactional
+    @Query(value = UPDATE_NOTE_BY_LOGGED_IN_USER, nativeQuery = true)
+    void updateNoteByLoggedInUser(String title, String content, String noteId, String userId);
 
 }

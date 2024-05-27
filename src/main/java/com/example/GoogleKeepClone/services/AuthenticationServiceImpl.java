@@ -90,7 +90,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     if(userInfo[0].equals(OTP.toString())) {
                         this.authenticationRepo.insertRegisteredUser(userInfo[1], userInfo[2], this.passwordHashUtility.hashPassword(userInfo[3]));
                         responseBody.put("Message", "Registration successful.");
-                        return new ResponseEntity<>(responseBody, HttpStatus.OK);
+                        return new ResponseEntity<>(responseBody, HttpStatus.CREATED);
                     }
                     else {
                         responseBody.put("Error", "Make sure that the OTP is correct.");
